@@ -484,6 +484,56 @@
 
         window.location.href = `mailto:${sendTo}?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(trackingBody)}`;
     });
+    document.getElementById('evaluationForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const sendTo = document.getElementById('submissionEmail').value;
+        const targetEmp = document.getElementById('empName').value;
+        const targetPos = document.getElementById('position').value;
+        const targetDate = document.getElementById('evalDate').value;
+        const improvementsText = document.getElementById('improvements').value || 'None provided';
+        const recommendationsText = document.getElementById('recommendations').value || 'None provided';
+        const evaluator = document.getElementById('evaluatorName').value || 'Anonymous';
+
+        let totalScoreSum = 0;
+        let countedQuestions = 0;
+
+        formSchema.forEach(section => {
+            section.questions.forEach(q => {
+                const checkedRadio = document.querySelector(`input[name="q_${q.id}"]:checked`);
+                if (checkedRadio) {
+                    totalScoreSum += parseFloat(checkedRadio.value);
+                    countedQuestions++;
+                }
+            });
+        });
+
+        const finalAverageScore = countedQuestions > 0 ? (totalScoreSum / countedQuestions) : 0;
+        const finalPercentageScore = finalAverageScore > 0 ? ((finalAverageScore / 5) * 100) : 0;
+        const finalDescriptiveRating = getDescriptiveRating(finalAverageScore);
+
+        // Lightweight email body to prevent browser freezing
+        let trackingBody = `TABACO CDRRMO OPERATIONS PERSONNEL PEER PERFORMANCE EVALUATION\n`;
+        trackingBody += `==================================================\n`;
+        trackingBody += `PERSON BEING EVALUATED    : ${targetEmp}\n`;
+        trackingBody += `DESIGNATION               : ${targetPos}\n`;
+        trackingBody += `EVALUATION DATE           : ${targetDate}\n`;
+        trackingBody += `EVALUATOR PROFILE         : ${evaluator}\n`;
+        trackingBody += `==================================================\n\n`;
+        
+        trackingBody += `OVERALL SCORE RATING      : ${finalAverageScore.toFixed(2)} / 5.00 (${Math.round(finalPercentageScore)}%)\n`;
+        trackingBody += `OVERALL PERFORMANCE RATING : ${finalDescriptiveRating}\n\n`;
+
+        trackingBody += `==================================================\n`;
+        trackingBody += `COMMENTS AND RECOMMENDATIONS:\n`;
+        trackingBody += `==================================================\n`;
+        trackingBody += `Areas for Improvement:\n${improvementsText}\n\n`;
+        trackingBody += `Recommendations:\n${recommendationsText}\n`;
+
+        const subjectLine = `Ops Peer Evaluation [Score: ${finalAverageScore.toFixed(2)}] - ${targetEmp}`;
+
+        window.location.href = `mailto:${sendTo}?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(trackingBody)}`;
+   });
 </script>
 
 </body>
